@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.remember
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.ktx.firestore
 
 class SignupPageActivity : ComponentActivity() {
     private fun showToast(message: String) {
@@ -155,15 +156,38 @@ class SignupPageActivity : ComponentActivity() {
                                         val user = auth.currentUser
                                         showToast("Sign-up successful: ${user?.email}")
 
-                                        // Implement any additional actions here, such as navigating to a new screen
-                                        val intent = Intent(this@SignupPageActivity, RestaurantScreen::class.java)
-                                        startActivity(intent)
+                                        // Create a Firestore reference to the users collection
+                                        val db = Firebase.firestore
+                                        val usersCollection = db.collection("users")
+
+                                        // Create a new user document with username and email fields
+                                        val userData = hashMapOf(
+                                            "username" to username,
+                                            "email" to email,
+                                            "cartitems" to emptyList<Any>() // Initialize the cartitems array as an empty list
+                                        )
+
+                                        // Add the user document to the Firestore collection
+                                        usersCollection
+                                            .document(user?.uid ?: "") // Use the UID as the document ID
+                                            .set(userData)
+                                            .addOnSuccessListener {
+                                                // Document creation success
+                                                showToast("User data added to Firestore")
+
+                                                // Implement any additional actions here, such as navigating to a new screen
+                                                val intent = Intent(this@SignupPageActivity, RestaurantScreen::class.java)
+                                                startActivity(intent)
+                                            }
+                                            .addOnFailureListener { e ->
+                                                // If document creation fails, display a message to the user.
+                                                showToast("Error adding user data to Firestore: ${e.message}")
+                                            }
                                     } else {
                                         // If sign-up fails, display a message to the user.
                                         showToast("Sign-up failed. ${task.exception?.message}")
                                     }
                                 }
-
                         }
                     } ,
                     enabled = !registrationInProgress
