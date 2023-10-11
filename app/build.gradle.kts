@@ -69,6 +69,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore:24.8.1")
     implementation("com.google.firebase:firebase-firestore-ktx:24.8.1")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition-common:19.0.0")
     testImplementation("junit:junit:4.13.2")
     implementation ("com.google.accompanist:accompanist-coil:0.15.0")
     implementation ("com.google.accompanist:accompanist-pager:0.20.0")

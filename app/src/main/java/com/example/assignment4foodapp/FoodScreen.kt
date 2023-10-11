@@ -1,7 +1,9 @@
 package com.example.assignment4foodapp
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -40,6 +42,16 @@ data class Dish(
 )
 
 class FoodScreen : ComponentActivity() {
+    var userId=""
+    var username=""
+    var email = " "
+    fun getUserDataLocally(sharedPreferences: SharedPreferences?): UserModel {
+        userId = sharedPreferences?.getString("username", "") ?: ""
+        username = sharedPreferences?.getString("email", "") ?: ""
+        email = sharedPreferences?.getString("userId", "") ?: ""
+
+        return UserModel(username, email,userId)
+    }
     private val dishes = listOf(
         Dish("Butter Chicken", "\u20B910", R.drawable.restraunt1),
         Dish("Paneer Tikka", "\u20B912", R.drawable.restraunt2),
@@ -53,10 +65,12 @@ class FoodScreen : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val sharedPreferences = getSharedPreferences("your_preference_name", Context.MODE_PRIVATE)
+        val userData = getUserDataLocally(sharedPreferences)
         setContent {
             val name = intent.getStringExtra("name") ?: ""
             val address = intent.getStringExtra("address") ?: ""
-            val rating = intent.getFloatExtra("rating", 0.0f)
+            val rating = intent.getDoubleExtra("rating", 0.0)
             val images = intent.getIntArrayExtra("images") ?: intArrayOf()
             val currentPage = intent.getIntExtra("currentPage", 0)
 
@@ -76,7 +90,7 @@ class FoodScreen : ComponentActivity() {
     fun FoodScreenContent(
         name: String,
         address: String,
-        rating: Float,
+        rating: Double,
         images: IntArray,
         currentPage: Int,
         dishes: List<Dish>,
@@ -86,7 +100,7 @@ class FoodScreen : ComponentActivity() {
 
         var searchText by remember { mutableStateOf("") }
         var cartItems by remember { mutableStateOf(0) }
-
+        Log.d("my Rating", rating.toString())
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -170,7 +184,7 @@ class FoodScreen : ComponentActivity() {
                             )
                             // Add space between icon and rating
                             Text(
-                                text = " $rating",
+                                text = "$rating",
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     color = Color.White

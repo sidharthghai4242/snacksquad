@@ -5,12 +5,16 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import android.content.SharedPreferences
+import android.util.Log
+import androidx.core.content.edit
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -27,8 +31,22 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.remember
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.firestore.ktx.firestore
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class SignupPageActivity : ComponentActivity() {
+    private lateinit var sharedPreferences: SharedPreferences
+    private fun saveUserDataLocally(userData: UserModel) {
+        sharedPreferences.edit {
+            putString("userId", userData.userId)
+            print(userData.userId)
+            putString("username", userData.username)
+            print(userData.username)
+            putString("email", userData.email)
+            print(userData.email)
+            // You can add more data as needed
+        }
+    }
+
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
@@ -36,6 +54,9 @@ class SignupPageActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE)
+        // Create or retrieve the SharedViewModel instance
+        val sharedViewModel: SharedViewModel by viewModels() // Add this to your Activity
         lateinit var auth: FirebaseAuth
         auth = Firebase.auth
         setContent {
@@ -140,56 +161,68 @@ class SignupPageActivity : ComponentActivity() {
                         containerColor = Color.Black
                     ),
                     onClick = {
-                        if (email.isEmpty()) {
-                            showToast("Please enter your email")
-                        } else if (password.isEmpty()) {
-                            showToast("Please enter your password")
-                        } else if (username.isEmpty()) {
-                            showToast("Please enter your username")
-                        } else {
-                            // Create a new user with email and password
-                            registrationInProgress = true
-                            auth.createUserWithEmailAndPassword(email, password)
-                                .addOnCompleteListener(this@SignupPageActivity) { task ->
-                                    if (task.isSuccessful) {
-                                        // Sign-up success, update UI with the signed-up user's information
-                                        val user = auth.currentUser
-                                        showToast("Sign-up successful: ${user?.email}")
+                        // ... (other validation logic)
+                        auth.createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(this@SignupPageActivity) { task ->
+                                if (task.isSuccessful) {
+                                    // Sign-up success, update UI with the signed-up user's information
+                                    val user = auth.currentUser
+                                    showToast("Sign-up successful: ${user?.email}")
 
-                                        // Create a Firestore reference to the users collection
-                                        val db = Firebase.firestore
-                                        val usersCollection = db.collection("users")
+                                    // Create a Firestore reference to the users collection
+                                    val db = Firebase.firestore
+                                    val usersCollection = db.collection("users")
 
-                                        // Create a new user document with username and email fields
-                                        val userData = hashMapOf(
-                                            "username" to username,
-                                            "email" to email,
-                                            "cartitems" to emptyList<Any>() // Initialize the cartitems array as an empty list
-                                        )
+                                    // Generate a new unique userId
+                                    val userId = usersCollection.document().id
 
-                                        // Add the user document to the Firestore collection
-                                        usersCollection
-                                            .document(user?.uid ?: "") // Use the UID as the document ID
-                                            .set(userData)
-                                            .addOnSuccessListener {
-                                                // Document creation success
-                                                showToast("User data added to Firestore")
+                                    // Create a new user document with username, email, and userId fields
+                                    val userData = hashMapOf(
+                                        "username" to username,
+                                        "email" to email,
+                                        "cart" to emptyList<Any>(), // Initialize the cart as an empty list
+                                        "userId" to userId // Add the userId field
+                                    )
 
-                                                // Implement any additional actions here, such as navigating to a new screen
-                                                val intent = Intent(this@SignupPageActivity, RestaurantScreen::class.java)
-                                                startActivity(intent)
-                                            }
-                                            .addOnFailureListener { e ->
-                                                // If document creation fails, display a message to the user.
-                                                showToast("Error adding user data to Firestore: ${e.message}")
-                                            }
-                                    } else {
-                                        // If sign-up fails, display a message to the user.
-                                        showToast("Sign-up failed. ${task.exception?.message}")
-                                    }
+                                    // Add the user document to the Firestore collection
+                                    usersCollection
+                                        .document(user?.uid ?: "") // Use the UID as the document ID
+                                        .set(userData)
+                                        .addOnSuccessListener {
+                                            // Document creation success
+                                            showToast("User data added to Firestore")
+
+                                            // Create a UserModel with the updated fields
+                                            val newUserModel = UserModel(
+                                                username = username,
+                                                email = email,
+                                                userId = userId,
+                                                cart = emptyList() // Initialize the cart as an empty list
+                                            )
+
+                                            // Store the UserModel in the shared ViewModel
+                                            sharedViewModel.setUserModel(newUserModel)
+                                            val um = sharedViewModel.getUserModel()
+                                            Log.d("myTag", um.toString());
+                                            Log.d("myTag", newUserModel.toString())
+                                            print("user model set")
+                                            // Save UserData locally using SharedPreferences
+                                            saveUserDataLocally(newUserModel)
+
+                                            // Implement any additional actions here, such as navigating to a new screen
+                                            val intent = Intent(this@SignupPageActivity, RestaurantScreen::class.java)
+                                            startActivity(intent)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            // If document creation fails, display a message to the user.
+                                            showToast("Error adding user data to Firestore: ${e.message}")
+                                        }
+                                } else {
+                                    // If sign-up fails, display a message to the user.
+                                    showToast("Sign-up failed. ${task.exception?.message}")
                                 }
-                        }
-                    } ,
+                            }
+                    },
                     enabled = !registrationInProgress
                 ) {
                     // Show different content based on login in progress
@@ -203,3 +236,6 @@ class SignupPageActivity : ComponentActivity() {
         }
     }
 }
+//val userId = sharedPreferences.getString("userId", "")
+//val username = sharedPreferences.getString("username", "")
+//val email = sharedPreferences.getString("email", "")

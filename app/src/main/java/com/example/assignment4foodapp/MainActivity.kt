@@ -1,5 +1,6 @@
 package com.example.assignment4foodapp
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -21,24 +22,77 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.content.Intent
+import android.content.SharedPreferences
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.AnnotatedString
+import androidx.core.content.edit
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.QuerySnapshot
+
 
 class MainActivity : ComponentActivity() {
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
+    private var sharedPreferences: SharedPreferences? = null
+
+
+    private fun saveUserDataLocally(userData: UserModel) {
+        sharedPreferences?.edit {
+            putString("userId", userData.userId)
+            print("userId"+ userData.userId)
+            putString("username", userData.username)
+            print("username"+ userData.username)
+            putString("email", userData.email)
+            print("userId"+ userData.email)
+            // You can add more data as needed
+        }
+    }
+
+    private fun fetchUserDataFromFirestore(email: String) {
+        val db = Firebase.firestore
+        val usersCollection = db.collection("users")
+
+        // Query the Firestore collection to find the document where email matches
+        usersCollection.whereEqualTo("email", email)
+            .get()
+            .addOnSuccessListener { documents ->
+                val document = documents.first()
+                // Extract user data from the document
+                val userId = document.getString("userId") ?: ""
+                val username = document.getString("username") ?: ""
+                val email = document.getString("email") ?: ""
+
+
+
+                // Create a UserModel with the fetched data
+                val userData = UserModel(userId, username, email)
+
+                // Save the user data in SharedPreferences
+                saveUserDataLocally(userData)
+
+                // Navigate to the desired screen (e.g., RestaurantScreen)
+                val intent = Intent(this@MainActivity, RestaurantScreen::class.java)
+                startActivity(intent)
+                print("user fetched from firestore and stored locally")
+            }
+            .addOnFailureListener { e ->
+                showToast("Error fetching user data from Firestore: ${e.message}")
+            }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        sharedPreferences = getSharedPreferences("your_preference_name", Context.MODE_PRIVATE)
         FirebaseApp.initializeApp(this)
         super.onCreate(savedInstanceState)
         setContent {
@@ -173,6 +227,8 @@ class MainActivity : ComponentActivity() {
                                                     val user: FirebaseUser? = auth.currentUser
                                                     showToast("Login successful: ${user?.email}")
                                                     // Start the RestaurantScreen activity or perform any other action
+                                                    fetchUserDataFromFirestore(email)
+                                                    print("logged in")
                                                     val intent = Intent(this@MainActivity, RestaurantScreen::class.java)
                                                     startActivity(intent)
                                                 } else {
