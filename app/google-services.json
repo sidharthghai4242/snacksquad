@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "239226091566",
-    "project_id": "food-delivery-d237d",
-    "storage_bucket": "food-delivery-d237d.appspot.com"
+    "project_number": "403975918420",
+    "project_id": "snacksquad-d630a",
+    "storage_bucket": "snacksquad-d630a.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:239226091566:android:de5c6496e7c38129b207bf",
+        "mobilesdk_app_id": "1:403975918420:android:e36673beb45cdc1964eec1",
         "android_client_info": {
           "package_name": "com.example.assignment4foodapp"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDNB8NHmBv7KHrnfTp1NjWwZioDO9PNaVg"
+          "current_key": "AIzaSyBMKJNEuzYx-NMUhieH-8ceRAnznbzAvVI"
         }
       ],
       "services": {

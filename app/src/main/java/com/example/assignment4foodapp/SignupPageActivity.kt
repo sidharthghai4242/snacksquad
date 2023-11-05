@@ -216,6 +216,7 @@ class SignupPageActivity : ComponentActivity() {
                                         .addOnFailureListener { e ->
                                             // If document creation fails, display a message to the user.
                                             showToast("Error adding user data to Firestore: ${e.message}")
+                                            Log.d("myTag","Error adding user data to Firestore: ${e.message}")
                                         }
                                 } else {
                                     // If sign-up fails, display a message to the user.

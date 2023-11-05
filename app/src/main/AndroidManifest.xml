@@ -41,6 +41,11 @@
             android:label="Food Screen"
             android:theme="@style/Theme.Assignment4foodapp">
         </activity>
+        <activity
+            android:name=".ProfileScreen"
+            android:label="Profile Screen"
+            android:theme="@style/Theme.Assignment4foodapp">
+        </activity>
     </application>
 
 </manifest>
