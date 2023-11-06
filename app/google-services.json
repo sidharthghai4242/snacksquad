@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "403975918420",
+    "project_id": "snacksquad-d630a",
+    "storage_bucket": "snacksquad-d630a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403975918420:android:e36673beb45cdc1964eec1",
+        "android_client_info": {
+          "package_name": "com.example.assignment4foodapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMKJNEuzYx-NMUhieH-8ceRAnznbzAvVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
