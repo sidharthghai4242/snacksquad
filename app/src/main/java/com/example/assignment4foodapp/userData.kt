@@ -4,7 +4,9 @@ data class UserData(
     val username: String,
     val email: String,
     val userId: String,
-    val cart: List<Any>
+    val cart: List<Any>,
+    val address:String,
+    val phoneno:Number
 )
 
 class UserDataViewModel : ViewModel() {
@@ -15,5 +17,8 @@ data class UserModel(
     val username: String,
     val email: String,
     val userId: String,
-    val cart: List<Any>
+    val cart: List<Any>,
+    val address:String,
+    val phoneno:Number
+
 )

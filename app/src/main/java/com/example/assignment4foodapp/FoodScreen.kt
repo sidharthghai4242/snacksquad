@@ -29,11 +29,15 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 data class Dish(
     val name: String,
@@ -41,17 +45,25 @@ data class Dish(
     val imageResId: Int
 )
 
+data class CartItems(
+    val dishName: String,
+    val dishCost: String,
+    val restaurantName: String,
+    val userName: String
+)
+
 class FoodScreen : ComponentActivity() {
-    var userId=""
-    var username=""
+    var userId = ""
+    var username = ""
     var email = " "
+
     fun getUserDataLocally(sharedPreferences: SharedPreferences?): UserModel {
         userId = sharedPreferences?.getString("username", "") ?: ""
         username = sharedPreferences?.getString("email", "") ?: ""
         email = sharedPreferences?.getString("userId", "") ?: ""
-
-        return UserModel(username, email,userId)
+        return UserModel(username, email, userId)
     }
+
     private val dishes = listOf(
         Dish("Butter Chicken", "\u20B910", R.drawable.restraunt1),
         Dish("Paneer Tikka", "\u20B912", R.drawable.restraunt2),
@@ -75,6 +87,7 @@ class FoodScreen : ComponentActivity() {
             val currentPage = intent.getIntExtra("currentPage", 0)
 
             FoodScreenContent(
+                email =userData.email,
                 name = name,
                 address = address,
                 rating = rating,
@@ -88,6 +101,7 @@ class FoodScreen : ComponentActivity() {
 
     @Composable
     fun FoodScreenContent(
+        email: String,
         name: String,
         address: String,
         rating: Double,
@@ -97,7 +111,6 @@ class FoodScreen : ComponentActivity() {
         context: Context
     ) {
         val starIconPainter: Painter = painterResource(id = R.drawable.ic_star)
-
         var searchText by remember { mutableStateOf("") }
         var cartItems by remember { mutableStateOf(0) }
         Log.d("my Rating", rating.toString())
@@ -116,9 +129,7 @@ class FoodScreen : ComponentActivity() {
                 contentScale = ContentScale.FillBounds // Adjust contentScale as needed
             )
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-
+                modifier = Modifier.fillMaxSize()
             ) {
                 // Restaurant details
                 Box(
@@ -129,7 +140,6 @@ class FoodScreen : ComponentActivity() {
                         .border(2.dp, Color.Black, RoundedCornerShape(0, 0, 8, 8))
                         .height(200.dp)
                 ) {
-
                     Column(
                         modifier = Modifier
                             .padding(16.dp)
@@ -278,9 +288,10 @@ class FoodScreen : ComponentActivity() {
                     contentPadding = PaddingValues(16.dp)
                 ) {
                     items(dishes) { dish ->
-                        DishCard(dish = dish, context = context) {
+                        DishCard(dish = dish, restaurantName = name, context = context) {
                             cartItems++
                             // Handle add to cart button click here
+                            addToCart(dish, name,email) // Add to cart
                         }
                     }
                 }
@@ -302,16 +313,20 @@ class FoodScreen : ComponentActivity() {
                         style = TextStyle(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
-                        )
-                    )
+                        ))
                 }
             }
         }
     }
-
 }
+
 @Composable
-fun DishCard(dish: Dish, context: Context, onAddToCartClick: () -> Unit) {
+fun DishCard(
+    dish: Dish,
+    restaurantName: String,
+    context: Context,
+    onAddToCartClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -337,8 +352,7 @@ fun DishCard(dish: Dish, context: Context, onAddToCartClick: () -> Unit) {
                     .height(100.dp)
                     .clip(MaterialTheme.shapes.medium)
             )
-            Spacer(modifier = Modifier
-                .width(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Column {
                 Text(
                     text = dish.name,
@@ -362,10 +376,12 @@ fun DishCard(dish: Dish, context: Context, onAddToCartClick: () -> Unit) {
                     )
 
                     IconButton(
-                        onClick = { onAddToCartClick() },
+                        onClick = {
+                            onAddToCartClick() // Include restaurantName when calling the callback
+                        },
                         modifier = Modifier
                             .height(36.dp)
-                            .width(120.dp) // Increase the width here
+                            .width(120.dp)
                             .padding(4.dp)
                             .background(Color(0xFFFF0000), shape = RoundedCornerShape(8))
                     ) {
@@ -386,8 +402,51 @@ fun DishCard(dish: Dish, context: Context, onAddToCartClick: () -> Unit) {
                     }
                 }
             }
-
         }
     }
     Spacer(modifier = Modifier.height(15.dp))
+}
+// Inside the FoodScreen class
+private fun addToCart(dish: Dish, restaurantName: String,email: String) {
+    val db = FirebaseFirestore.getInstance()
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    if (currentUser != null) {
+        val cartItem = CartItems(dish.name, dish.cost, restaurantName, currentUser.uid)
+
+        // Update the cart field in the users collection
+        val usersCollection = db.collection("users")
+
+        // Build a reference to the user's document based on their email
+        val userDocumentRef = usersCollection.whereEqualTo("email", email).limit(1)
+
+        userDocumentRef.get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val userDocument = documents.documents[0]
+
+                    // Get the current cart array
+                    val currentCart = userDocument.get("cart") as? List<Map<String, Any>>
+
+                    // Create a new cart with the added item
+                    val updatedCart = currentCart.orEmpty() + mapOf(
+                        "dishName" to dish.name,
+                        "dishCost" to dish.cost,
+                        "restaurantName" to restaurantName
+                    )
+
+                    // Update the cart field in the user's document
+                    userDocument.reference.update("cart", updatedCart)
+                        .addOnSuccessListener {
+                            Log.d("FoodScreen", "Added to cart: ${dish.name}")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w("FoodScreen", "Error adding to cart", e)
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.w("FoodScreen", "Error getting user document", e)
+            }
+    }
 }
