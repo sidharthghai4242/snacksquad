@@ -44,6 +44,10 @@ class SignupPageActivity : ComponentActivity() {
             print(userData.username)
             putString("email", userData.email)
             print(userData.email)
+            putString("phone", userData.phone)
+            print(userData.phone)
+            putString("address", userData.address)
+            print(userData.address)
             // You can add more data as needed
         }
     }
@@ -216,7 +220,10 @@ class SignupPageActivity : ComponentActivity() {
                                             "username" to username,
                                             "email" to email,
                                             "cart" to emptyList<Any>(), // Initialize the cart as an empty list
-                                            "userId" to userId // Add the userId field
+                                            "userId" to userId,
+                                            "phone" to phoneno,
+                                            "address" to address
+                                        // Add the userId field
                                         )
 
                                         // Add the user document to the Firestore collection
@@ -232,7 +239,9 @@ class SignupPageActivity : ComponentActivity() {
                                                     username = username,
                                                     email = email,
                                                     userId = userId,
-                                                    cart = emptyList() // Initialize the cart as an empty list
+                                                    cart = emptyList(),
+                                                    phone = phoneno,
+                                                    address = address// Initialize the cart as an empty list
                                                 )
 
                                                 // Store the UserModel in the shared ViewModel

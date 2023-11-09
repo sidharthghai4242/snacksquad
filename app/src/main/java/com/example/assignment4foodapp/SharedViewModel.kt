@@ -29,7 +29,9 @@ data class UserModel(
     val username: String,
     val email: String,
     val userId: String, // Add the userId field if needed
-    val cart: List<String> = emptyList(),
-    // Initialize as an empty list
+    val cart: List<String>? = emptyList(),
+    var phone: String,
+    var address: String // Initialize as an empty list
     // Add other fields as needed
 )
+

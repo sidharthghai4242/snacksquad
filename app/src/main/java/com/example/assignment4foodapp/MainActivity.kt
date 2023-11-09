@@ -71,11 +71,11 @@ class MainActivity : ComponentActivity() {
                 val userId = document.getString("userId") ?: ""
                 val username = document.getString("username") ?: ""
                 val email = document.getString("email") ?: ""
-
-
-
+                val phone = document.getString("phone") ?: ""
+                val address = document.getString("address") ?: ""
+                val cartitems: List<String> = emptyList()
                 // Create a UserModel with the fetched data
-                val userData = UserModel(userId, username, email)
+                val userData = UserModel(userId, username, email,cartitems,phone,address)
 
                 // Save the user data in SharedPreferences
                 saveUserDataLocally(userData)

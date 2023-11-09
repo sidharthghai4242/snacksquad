@@ -62,13 +62,16 @@ class ProfileScreen : ComponentActivity() {
     var userId = ""
     var username = ""
     var email = " "
-
+    var phone=""
+    var address=""
     fun getUserDataLocally(sharedPreferences: SharedPreferences?): UserModel {
         userId = sharedPreferences?.getString("username", "") ?: ""
         username = sharedPreferences?.getString("email", "") ?: ""
         email = sharedPreferences?.getString("userId", "") ?: ""
-
-        return UserModel(username, email, userId)
+        phone = sharedPreferences?.getString("phone", "") ?: ""
+        address=sharedPreferences?.getString("address", "") ?: ""
+        val cartitems: List<String> = emptyList()
+        return UserModel(username, email, userId,cartitems,phone,address)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -269,6 +272,10 @@ class ProfileScreen : ComponentActivity() {
                                                     CoroutineScope(Dispatchers.IO).launch {
                                                         try {
                                                             Firebase.auth.signOut()
+                                                            val sharedPreferences = getSharedPreferences("your_prefs_name", Context.MODE_PRIVATE)
+                                                            val editor = sharedPreferences.edit()
+                                                            editor.clear()
+                                                            editor.apply()
                                                             withContext(Dispatchers.Main) {
                                                                 Toast
                                                                     .makeText(

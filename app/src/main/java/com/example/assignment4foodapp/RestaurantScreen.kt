@@ -428,13 +428,16 @@ class RestaurantScreen : ComponentActivity() {
     var userId = ""
     var username = ""
     var email = " "
-
+    var phone=""
+    var address=""
     fun getUserDataLocally(sharedPreferences: SharedPreferences?): UserModel {
         userId = sharedPreferences?.getString("username", "") ?: ""
         username = sharedPreferences?.getString("email", "") ?: ""
         email = sharedPreferences?.getString("userId", "") ?: ""
-
-        return UserModel(username, email, userId)
+        phone = sharedPreferences?.getString("phone", "") ?: ""
+        address=sharedPreferences?.getString("address", "") ?: ""
+        val cartitems: List<String> = emptyList()
+        return UserModel(username, email, userId,cartitems,phone,address)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
